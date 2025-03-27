@@ -1,0 +1,36 @@
+name: TeleClean Bot
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"  # Runs every 15 minutes
+  workflow_dispatch:         # Allows manual triggering
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install -U pip uv
+          uv pip install --system pyrogram tgcrypto python-dotenv requests
+
+      - name: Run TeleClean Bot
+        run: python bot/main.py
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          OVERALL_MSGS_DURATION: ${{ secrets.OVERALL_MSGS_DURATION }}
+          OWNER_ID: ${{ secrets.OWNER_ID }}
+          SESSION_STRING: ${{ secrets.SESSION_STRING }}
+          USER_MSGS_DURATION: ${{ secrets.USER_MSGS_DURATION }}
