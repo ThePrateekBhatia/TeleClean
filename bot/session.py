@@ -1,14 +1,15 @@
 from pyrogram import Client
-import os
 
-def get_user_client():
-    session_string = os.getenv("SESSION_STRING")
-    if not session_string:
-        return None  # No session string provided
-
-    return Client(
-        name="user_client",
-        api_id=int(os.getenv("API_ID")),
-        api_hash=os.getenv("API_HASH"),
+async def connect_user(api_id, api_hash, session_string):
+    """
+    Connect to Telegram using the User Session.
+    """
+    client = Client(
+        name="user_session",
+        api_id=api_id,
+        api_hash=api_hash,
         session_string=session_string
     )
+    await client.start()
+    print("✅ User session connected successfully.")
+    return client
