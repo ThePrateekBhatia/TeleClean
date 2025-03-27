@@ -21,10 +21,10 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install -U pip uv
-          uv pip install --system pyrogram tgcrypto python-dotenv requests
+          uv pip install --system pyrogram tgcrypto python-dotenv requests aiohttp
 
       - name: Run TeleClean Bot
-        working-directory: bot   # Correct indentation here
+        working-directory: bot
         run: python main.py
         env:
           API_ID: ${{ secrets.API_ID }}
