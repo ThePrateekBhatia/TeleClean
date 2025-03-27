@@ -1,31 +1,94 @@
 import asyncio
+import datetime
 from pyrogram.errors import FloodWait
+from .data_handler import handle_deleted_data
 
-async def delete_messages(client, chat_id, messages):
+async def delete_user_messages(client, chat_id, duration, owner_id):
     """
-    Deletes a batch of messages from a given chat.
+    Deletes user messages after a given duration.
 
     Args:
-    - client: Pyrogram client (bot or user session).
-    - chat_id (int): Target chat ID for message deletion.
-    - messages (list): List of message IDs to delete.
+    - client: Pyrogram client (bot mode).
+    - chat_id (int): Target chat ID.
+    - duration (int): Time in seconds after which messages are deleted.
+    - owner_id (int): Owner ID for message logs.
     """
-    if not messages:
-        print("✅ No messages to delete.")
-        return
+    print(f"🔍 Monitoring user messages in {chat_id}...")
 
-    try:
-        # Batch deletion (max 100 messages per request)
-        for i in range(0, len(messages), 100):
-            batch = [msg.id for msg in messages[i:i + 100]]
-            await client.delete_messages(chat_id, batch)
-            print(f"🗑️ Deleted {len(batch)} messages.")
-            await asyncio.sleep(2)  # To avoid hitting rate limits
+    while True:
+        try:
+            # Time window to delete messages
+            cutoff_time = datetime.datetime.now() - datetime.timedelta(seconds=duration)
 
-    except FloodWait as e:
-        print(f"⏳ Rate limited. Waiting for {e.value} seconds...")
-        await asyncio.sleep(e.value)
-        await delete_messages(client, chat_id, messages)  # Retry after waiting
+            # Collect messages for deletion and logging
+            messages_to_delete = []
+            async for msg in client.get_chat_history(chat_id, limit=500):
+                if msg.date < cutoff_time and msg.from_user:
+                    messages_to_delete.append(msg)
 
-    except Exception as error:
-        print(f"❌ Error while deleting messages: {error}")
+            if messages_to_delete:
+                print(f"🗑️ Deleting {len(messages_to_delete)} user messages.")
+                
+                # Log deleted data before actual deletion
+                await handle_deleted_data(client, messages_to_delete, owner_id)
+                
+                for msg in messages_to_delete:
+                    try:
+                        await client.delete_messages(chat_id, msg.message_id)
+                        await asyncio.sleep(0.5)  # Avoid hitting rate limits
+                    except FloodWait as e:
+                        print(f"⏳ Rate limit hit. Sleeping for {e.x} seconds.")
+                        await asyncio.sleep(e.x)
+            else:
+                print("✅ No user messages to delete.")
+
+            # Wait and repeat
+            await asyncio.sleep(60)
+
+        except Exception as e:
+            print(f"❌ Error during user message deletion: {e}")
+            await asyncio.sleep(30)
+
+async def delete_all_messages(client, chat_id, duration, owner_id):
+    """
+    Deletes all messages after a given duration (for user session mode).
+
+    Args:
+    - client: Pyrogram client (user mode).
+    - chat_id (int): Target chat ID.
+    - duration (int): Time in seconds after which messages are deleted.
+    - owner_id (int): Owner ID for message logs.
+    """
+    print(f"🔍 Monitoring all messages in {chat_id}...")
+
+    while True:
+        try:
+            cutoff_time = datetime.datetime.now() - datetime.timedelta(seconds=duration)
+
+            # Collect all messages (visible chat history required)
+            messages_to_delete = []
+            async for msg in client.get_chat_history(chat_id, limit=500):
+                if msg.date < cutoff_time:
+                    messages_to_delete.append(msg)
+
+            if messages_to_delete:
+                print(f"🗑️ Deleting {len(messages_to_delete)} total messages.")
+                
+                # Log deleted data before actual deletion
+                await handle_deleted_data(client, messages_to_delete, owner_id)
+                
+                for msg in messages_to_delete:
+                    try:
+                        await client.delete_messages(chat_id, msg.message_id)
+                        await asyncio.sleep(0.5)
+                    except FloodWait as e:
+                        print(f"⏳ Rate limit hit. Sleeping for {e.x} seconds.")
+                        await asyncio.sleep(e.x)
+            else:
+                print("✅ No messages to delete.")
+
+            await asyncio.sleep(60)
+
+        except Exception as e:
+            print(f"❌ Error during message deletion: {e}")
+            await asyncio.sleep(30)
