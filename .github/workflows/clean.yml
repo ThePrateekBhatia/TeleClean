@@ -24,14 +24,14 @@ jobs:
           uv pip install --system pyrogram tgcrypto python-dotenv requests
 
       - name: Run TeleClean Bot
+        working-directory: bot   # Correct indentation here
         run: python main.py
-          working-directory: bot
         env:
-        API_ID: ${{ secrets.API_ID }}
-        API_HASH: ${{ secrets.API_HASH }}
-        BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-        CHAT_ID: ${{ secrets.CHAT_ID }}
-        OVERALL_MSGS_DURATION: ${{ secrets.OVERALL_MSGS_DURATION }}
-        OWNER_ID: ${{ secrets.OWNER_ID }}
-        SESSION_STRING: ${{ secrets.SESSION_STRING }}
-        USER_MSGS_DURATION: ${{ secrets.USER_MSGS_DURATION }}
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          OVERALL_MSGS_DURATION: ${{ secrets.OVERALL_MSGS_DURATION }}
+          OWNER_ID: ${{ secrets.OWNER_ID }}
+          SESSION_STRING: ${{ secrets.SESSION_STRING }}
+          USER_MSGS_DURATION: ${{ secrets.USER_MSGS_DURATION }}
