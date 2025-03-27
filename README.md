@@ -35,7 +35,13 @@ pip install -r requirements.txt
 
 3. **Generate Session String**
 
-Use the provided script in the `assets` folder to generate your session string.
+Use the provided script in the `assets` folder to generate your session string:
+
+```bash
+python assets/generate_session.py
+```
+
+Your session string will be sent to your **Saved Messages** with the tags `#SessionString #Telethon #TeleClean`.
 
 4. **Configure the Script**
 
