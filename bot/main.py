@@ -5,35 +5,28 @@ from bot.session import connect_user
 from bot.bot_connect import connect_bot
 from bot.helper.delete import delete_user_messages, delete_all_messages
 
+# Load environment variables from .env file
 load_dotenv()
 
 async def main():
-    # Load environment variables
-    api_id = int(os.getenv("API_ID"))
-    api_hash = os.getenv("API_HASH")
-    bot_token = os.getenv("BOT_TOKEN")
-    session_string = os.getenv("SESSION_STRING")
-    chat_id = int(os.getenv("CHAT_ID"))
-    user_msgs_duration = int(os.getenv("USER_MSGS_DURATION"))
-    overall_msgs_duration = int(os.getenv("OVERALL_MSGS_DURATION"))
-    owner_id = int(os.getenv("OWNER_ID"))
+    # Connect to User and Bot Clients
+    user_client = await connect_user()
+    bot_client = await connect_bot()
 
-    # Determine connection mode
-    client = None
-    if session_string:
-        print("🔗 Connecting via user session...")
-        client = await connect_user(api_id, api_hash, session_string)
-        asyncio.create_task(delete_all_messages(client, chat_id, overall_msgs_duration, owner_id))
-    elif bot_token:
-        print("🤖 Connecting via bot token...")
-        client = await connect_bot(api_id, api_hash, bot_token)
-        asyncio.create_task(delete_user_messages(client, chat_id, user_msgs_duration, owner_id))
-    else:
-        print("❌ No valid connection provided (BOT_TOKEN or SESSION_STRING required).")
-        return
+    print("✅ Both User and Bot Clients Connected Successfully!")
 
-    print("🚀 Bot is running and monitoring messages.")
-    await client.run()
+    # Start message deletion handlers
+    user_msgs_duration = int(os.getenv("USER_MSGS_DURATION", 0))
+    overall_msgs_duration = int(os.getenv("OVERALL_MSGS_DURATION", 0))
+
+    if user_msgs_duration > 0:
+        asyncio.create_task(delete_user_messages(user_client, user_msgs_duration))
+
+    if overall_msgs_duration > 0:
+        asyncio.create_task(delete_all_messages(bot_client, overall_msgs_duration))
+
+    # Keep the event loop running
+    await asyncio.gather(user_client.run(), bot_client.run())
 
 if __name__ == "__main__":
     asyncio.run(main())
