@@ -1,13 +1,15 @@
 import asyncio
 import os
+import sys
 from dotenv import load_dotenv
 
-# Import modules using relative paths
-from .session import connect_user
-from .bot_connect import connect_bot
-from .helper.delete import delete_user_messages, delete_all_messages
+# Ensure Python recognizes 'bot/' directory
+sys.path.append(os.path.dirname(__file__))
 
-# Load environment variables
+from session import connect_user
+from bot_connect import connect_bot
+from helper.delete import delete_user_messages, delete_all_messages
+
 load_dotenv()
 
 async def main():
@@ -23,7 +25,6 @@ async def main():
     if overall_msgs_duration > 0:
         asyncio.create_task(delete_all_messages(bot_client, overall_msgs_duration))
 
-    # Run both clients concurrently
     await asyncio.gather(user_client.run(), bot_client.run())
 
 if __name__ == "__main__":
