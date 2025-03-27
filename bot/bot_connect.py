@@ -1,14 +1,15 @@
 from pyrogram import Client
-import os
 
-def get_bot_client():
-    bot_token = os.getenv("BOT_TOKEN")
-    if not bot_token:
-        return None  # No bot token provided
-
-    return Client(
+async def connect_bot(api_id, api_hash, bot_token):
+    """
+    Connect to Telegram using the Bot Token.
+    """
+    client = Client(
         name="bot_client",
-        api_id=int(os.getenv("API_ID")),
-        api_hash=os.getenv("API_HASH"),
+        api_id=api_id,
+        api_hash=api_hash,
         bot_token=bot_token
     )
+    await client.start()
+    print("✅ Bot token connected successfully.")
+    return client
