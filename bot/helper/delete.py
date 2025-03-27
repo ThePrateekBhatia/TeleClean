@@ -1,30 +1,31 @@
 import asyncio
+from pyrogram.errors import FloodWait
 
-async def delete_messages(clients, chat_id, message_ids):
+async def delete_messages(client, chat_id, messages):
     """
-    Deletes messages from a chat using provided clients (user session/bot client).
+    Deletes a batch of messages from a given chat.
 
     Args:
-    - clients (list): List of active clients (user or bot).
-    - chat_id (int): Target chat ID where messages will be deleted.
-    - message_ids (list): List of message IDs to delete.
+    - client: Pyrogram client (bot or user session).
+    - chat_id (int): Target chat ID for message deletion.
+    - messages (list): List of message IDs to delete.
     """
-    batch_size = 100  # Maximum batch size for bulk deletion
-    total_deleted = 0
+    if not messages:
+        print("✅ No messages to delete.")
+        return
 
-    # Delete messages in chunks to avoid exceeding API limits
-    for i in range(0, len(message_ids), batch_size):
-        batch = message_ids[i:i + batch_size]
+    try:
+        # Batch deletion (max 100 messages per request)
+        for i in range(0, len(messages), 100):
+            batch = [msg.id for msg in messages[i:i + 100]]
+            await client.delete_messages(chat_id, batch)
+            print(f"🗑️ Deleted {len(batch)} messages.")
+            await asyncio.sleep(2)  # To avoid hitting rate limits
 
-        for client in clients:
-            try:
-                await client.delete_messages(chat_id, batch, revoke=True)
-                total_deleted += len(batch)
-                print(f"✅ Deleted {len(batch)} messages via {client.__class__.__name__}")
-            except Exception as e:
-                print(f"❌ Error while deleting messages: {e}")
-            
-            # Prevent floodwait issues
-            await asyncio.sleep(1)
+    except FloodWait as e:
+        print(f"⏳ Rate limited. Waiting for {e.value} seconds...")
+        await asyncio.sleep(e.value)
+        await delete_messages(client, chat_id, messages)  # Retry after waiting
 
-    print(f"🗑️ Total Messages Deleted: {total_deleted}")
+    except Exception as error:
+        print(f"❌ Error while deleting messages: {error}")
