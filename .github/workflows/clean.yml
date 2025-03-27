@@ -1,4 +1,4 @@
-name: TeleClean Bot
+name: Run TeleClean Bot
 
 on:
   schedule:
@@ -24,7 +24,8 @@ jobs:
           uv pip install --system pyrogram tgcrypto python-dotenv requests
 
       - name: Run TeleClean Bot
-        run: python bot/main.py
+        working-directory: bot
+        run: python main.py
         env:
           API_ID: ${{ secrets.API_ID }}
           API_HASH: ${{ secrets.API_HASH }}
